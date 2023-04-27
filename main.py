@@ -1,5 +1,6 @@
 import io
 import os
+import wave
 import traceback
 import logging
 from datetime import datetime
@@ -9,10 +10,11 @@ from google.api_core.exceptions import GoogleAPICallError
 from flask import Flask, jsonify, json, request, make_response, abort, send_file
 
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webep'}
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webep'}
+ALLOWED_AUDIO_EXTENSIONS = {'wav'}
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1000 * 1000
 
 
 @app.errorhandler(HTTPException)
@@ -56,9 +58,12 @@ def before_request():
     service.check_auth_token_is_valid(token)
 
 
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def allowed_image_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
+
+
+def allowed_audio_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_AUDIO_EXTENSIONS
 
 
 @app.route('/', methods=['GET'])
@@ -72,11 +77,13 @@ def vision():
 
     if not file:
         abort(422, 'Please upload the image using the image parameter.')
-    if not allowed_file(file.filename) or file.filename == '':
+    if file.filename == '' or not allowed_image_file(file.filename):
         abort(422, 'Unsupported image type.')
-    else:
-        data = service.detect_text(file)
-        return jsonify({'data': data})
+
+    content = file.read()
+    data = service.detect_text(content)
+
+    return jsonify({'data': data})
 
 
 @app.route('/text_to_speech', methods=['POST'])
@@ -86,13 +93,32 @@ def text_to_speech():
     if not text:
         abort(422, 'The parameter `text` is required.')
     if len(text.encode('utf-8')) >= 5000:
-        abort(422, 'Please provide the text must < 5,000 bytes')
+        abort(422, 'The text string must < 5,000 bytes')
     data = service.text_to_speech(text)
 
     name = f"audio_{datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
 
-    return send_file(io.BytesIO(data), mimetype="audio/x-wav",
-                     as_attachment=True, download_name=name)
+    return send_file(io.BytesIO(data), mimetype="audio/x-wav", as_attachment=True, download_name=name)
+
+
+@app.route('/speech_to_text', methods=['POST'])
+def speech_to_text():
+    file = request.files.get('audio')
+
+    if not file:
+        abort(422, 'Please upload the audio using the audio parameter.')
+    if file.filename == '' or not allowed_audio_file(file.filename):
+        abort(422, 'Unsupported audio type.')
+
+    content = file.read()
+    with wave.open(io.BytesIO(content)) as wav:
+        duration_seconds = wav.getnframes() / wav.getframerate()
+        if duration_seconds >= 60:
+            abort(422, 'The duration_seconds of audio is too long (> 60 seconds).')
+
+    data = service.speech_to_text(content)
+
+    return jsonify({'data': data})
 
 
 if __name__ == '__main__':

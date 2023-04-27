@@ -1,10 +1,10 @@
 import logging
 from flask import abort
-from werkzeug.datastructures import FileStorage
 from .config import GOOGLE_API_KEY, APP_AUTH_TOKEN
 from .exceptions import *
-from google.cloud import vision
+from google.cloud import speech
 from google.cloud import texttospeech
+from google.cloud import vision
 from google.api_core.client_options import ClientOptions
 
 
@@ -34,11 +34,11 @@ def check_auth_token_is_valid(token: str | None) -> bool:
     return True
 
 
-def detect_text(file: FileStorage) -> list:
+def detect_text(content: bytes) -> list:
     """Detects text in the file."""
     client = vision.ImageAnnotatorClient(client_options=clientOptions)
 
-    image = vision.Image(content=file.read())
+    image = vision.Image(content=content)
     response = client.text_detection(image=image)
 
     if response.error.message:
@@ -74,3 +74,21 @@ def text_to_speech(text: str) -> bytes:
 
     # The response's audio_content is binary.
     return response.audio_content
+
+
+def speech_to_text(content: bytes) -> list:
+    # Instantiates a client
+    client = speech.SpeechClient(client_options=clientOptions)
+
+    audio = speech.RecognitionAudio(content=content)
+    config = speech.RecognitionConfig(encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16, language_code="zh-TW")
+
+    # Detects speech in the audio file
+    response = client.recognize(config=config, audio=audio)
+
+    data = []
+    for result in response.results:
+        for alt in result.alternatives:
+            data.append({'transcript': alt.transcript, 'confidence': alt.confidence})
+
+    return data
