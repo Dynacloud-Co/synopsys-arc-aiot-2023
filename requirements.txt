@@ -1,0 +1,2 @@
+Flask==2.2.3
+google.cloud.vision==3.4.1
