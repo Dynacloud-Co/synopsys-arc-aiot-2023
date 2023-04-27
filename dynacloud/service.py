@@ -4,6 +4,7 @@ from werkzeug.datastructures import FileStorage
 from .config import GOOGLE_API_KEY, APP_AUTH_TOKEN
 from .exceptions import *
 from google.cloud import vision
+from google.cloud import texttospeech
 from google.api_core.client_options import ClientOptions
 
 
@@ -51,3 +52,25 @@ def detect_text(file: FileStorage) -> list:
         })
 
     return data
+
+
+def text_to_speech(text: str) -> bytes:
+    # Instantiates a client
+    client = texttospeech.TextToSpeechClient(client_options=clientOptions)
+
+    # Set the text input to be synthesized
+    synthesis_input = texttospeech.SynthesisInput(text=text)
+
+    # Build the voice request, select the language code ("en-US") and the ssml
+    # voice gender ("neutral")
+    voice = texttospeech.VoiceSelectionParams(language_code="zh-TW", ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL)
+
+    # Select the type of audio file you want returned
+    audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.LINEAR16)
+
+    # Perform the text-to-speech request on the text input with the selected
+    # voice parameters and audio file type
+    response = client.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
+
+    # The response's audio_content is binary.
+    return response.audio_content

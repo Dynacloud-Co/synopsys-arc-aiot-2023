@@ -1,10 +1,12 @@
+import io
 import os
 import traceback
 import logging
+from datetime import datetime
 from dynacloud import service, exceptions
 from werkzeug.exceptions import HTTPException
 from google.api_core.exceptions import GoogleAPICallError
-from flask import Flask, jsonify, json, request, make_response, abort
+from flask import Flask, jsonify, json, request, make_response, abort, send_file
 
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webep'}
@@ -75,6 +77,22 @@ def vision():
     else:
         data = service.detect_text(file)
         return jsonify({'data': data})
+
+
+@app.route('/text_to_speech', methods=['POST'])
+def text_to_speech():
+    text = request.form.get('text')
+
+    if not text:
+        abort(422, 'The parameter `text` is required.')
+    if len(text.encode('utf-8')) >= 5000:
+        abort(422, 'Please provide the text must < 5,000 bytes')
+    data = service.text_to_speech(text)
+
+    name = f"audio_{datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
+
+    return send_file(io.BytesIO(data), mimetype="audio/x-wav",
+                     as_attachment=True, download_name=name)
 
 
 if __name__ == '__main__':
