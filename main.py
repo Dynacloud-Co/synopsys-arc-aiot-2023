@@ -4,7 +4,7 @@ import wave
 import traceback
 import logging
 from datetime import datetime
-from dynacloud import service, exceptions
+from dynacloud import service
 from werkzeug.exceptions import HTTPException
 from google.api_core.exceptions import GoogleAPICallError
 from flask import Flask, jsonify, json, request, make_response, abort, send_file
@@ -32,12 +32,6 @@ def handle_http_exception(e):
 
 @app.errorhandler(GoogleAPICallError)
 def handle_google_api_error(e):
-    logging.warning(e.message)
-    return make_response(jsonify({"errors": [e.message]}), e.code)
-
-
-@app.errorhandler(exceptions.CustomException)
-def handle_custom_exception(e):
     logging.warning(e.message)
     return make_response(jsonify({"errors": [e.message]}), e.code)
 

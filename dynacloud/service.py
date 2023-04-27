@@ -1,7 +1,6 @@
 import logging
 from flask import abort
 from .config import GOOGLE_API_KEY, APP_AUTH_TOKEN
-from .exceptions import *
 from google.cloud import speech
 from google.cloud import texttospeech
 from google.cloud import vision
@@ -42,7 +41,7 @@ def detect_text(content: bytes) -> list:
     response = client.text_detection(image=image)
 
     if response.error.message:
-        raise CustomException(response.error.message, 400)
+        abort(400, response.error.message)
 
     data = []
     for text in response.text_annotations:
