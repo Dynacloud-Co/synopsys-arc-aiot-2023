@@ -92,3 +92,49 @@ curl -X POST -k --location "$API_HOST/text_to_speech" --header "Authorization: B
 curl -X POST -k --location "$API_HOST/speech_to_text" --header "Authorization: Bearer $APP_AUTH_TOKEN" --form 'audio=@"audio.wav"'
 ```
 </details>
+
+
+
+
+
+## VM Docs
+### App Information
+<details>
+
+> | Type    | Path / Command                |
+> |---------|-------------------------------|
+> | App Dir | /home/app/                    |
+> | Config  | /home/app/dynacloud/config.py |
+> | Log Dir | /var/log/app/                 |
+> | Start   | `systemctl start app`         |
+> | Stop    | `systemctl stop app`          |
+</details>
+
+
+
+### App Setup
+<details>
+
+#### Setup `APP_AUTH_TOKEN`
+```shell
+# Replace APP_AUTH_TOKEN with the random string in the config.
+APP_AUTH_TOKEN=$(openssl rand -hex 40)
+sed -i "s/APP_AUTH_TOKEN = '.*'/APP_AUTH_TOKEN = '$APP_AUTH_TOKEN'/" /home/app/dynacloud/config.py
+
+
+# Before
+APP_AUTH_TOKEN = '%_put_your_auth_token_here_%'
+
+# After (This is an example random string. Please do not use this one.)
+APP_AUTH_TOKEN = '2b417826febbb4c9cd40d0cc1f250679a3cb2d44a8ce3f93955e21218198be2e42a091dcc0b6fd38'
+```
+
+
+
+#### Enable & Start App
+```shell
+sudo systemctl enable app
+sudo systemctl start app
+sudo systemctl status app
+```
+</details>
