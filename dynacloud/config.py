@@ -1,3 +1,3 @@
 
-GOOGLE_API_KEY = '% Put your google_api_key here. %'
-APP_AUTH_TOKEN = '% Put your app_token here. %'
+GOOGLE_API_KEY = None
+APP_AUTH_TOKEN = '%_put_your_auth_token_here_%'

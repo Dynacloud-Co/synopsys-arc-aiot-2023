@@ -6,8 +6,7 @@ from google.cloud import texttospeech
 from google.cloud import vision
 from google.api_core.client_options import ClientOptions
 
-
-clientOptions = ClientOptions(api_key=GOOGLE_API_KEY)
+clientOptions = ClientOptions() if GOOGLE_API_KEY is None else ClientOptions(api_key=GOOGLE_API_KEY)
 
 
 def parse_token_from_auth_header(auth_header) -> str | None:
