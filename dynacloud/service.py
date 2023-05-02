@@ -9,7 +9,7 @@ from google.api_core.client_options import ClientOptions
 clientOptions = ClientOptions() if GOOGLE_API_KEY is None else ClientOptions(api_key=GOOGLE_API_KEY)
 
 
-def parse_token_from_auth_header(auth_header) -> str | None:
+def parse_token_from_auth_header(auth_header):
     try:
         if isinstance(auth_header, str):
             auth_token = auth_header.strip().split(" ")[-1]
@@ -23,7 +23,7 @@ def parse_token_from_auth_header(auth_header) -> str | None:
         return None
 
 
-def check_auth_token_is_valid(token: str | None) -> bool:
+def check_auth_token_is_valid(token) -> bool:
     if token is None or token != APP_AUTH_TOKEN:
         logging.warning(f'check_auth_token_is_valid;INVALID;TOKEN;{token}')
         abort(401, "The server could not verify that you are authorized to access the URL requested.")
