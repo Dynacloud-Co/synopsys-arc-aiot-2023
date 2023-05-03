@@ -1,22 +1,34 @@
 import io
 import os
+import sys
 import wave
-import traceback
 import logging
+import traceback
+from logging.config import dictConfig
 from datetime import datetime
 from dynacloud import service
 from werkzeug.exceptions import HTTPException
 from google.api_core.exceptions import GoogleAPICallError
 from flask import Flask, jsonify, json, request, make_response, abort, send_file
 
-logger = logging.getLogger()
-ch = logging.StreamHandler()
-ch_formatter = logging.Formatter(f'[%(asctime)s.%(msecs)03d] [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-ch.setFormatter(ch_formatter)
-logger.addHandler(ch)
-
 ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webep'}
 ALLOWED_AUDIO_EXTENSIONS = {'wav'}
+
+dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.StreamHandler',
+        'stream': sys.stdout,
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': 'DEBUG',
+        'handlers': ['wsgi']
+    }
+})
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1000 * 1000
